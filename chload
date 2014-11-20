@@ -1,0 +1,69 @@
+#!/bin/sh
+ 
+#(C) 2005, ngsupb <ngsupb@yahoo.com>
+ 
+C_GREEN='\033[0;32m'
+C_RED='\033[0;31m'
+C_RESET='\033[0m'
+ 
+N_PID=5
+ 
+while [ $N_PID -lt 6 ]
+do
+clear
+N_PID=5
+ 
+out_color (){
+ 
+        if [ "$1" != "1" ]; then
+                echo -e $C_GREEN $2 $C_RESET
+        else
+                echo -e $C_RED $2 $C_RESET
+        fi
+ 
+ 
+}
+ 
+LOAD=`uptime |awk '{print $11}' | sed -e 's/,//'`;
+ 
+SL=`echo $LOAD | awk '{if (load<5) print "0"; if (load>5) print "1"}' load=$LOAD`
+ 
+echo -e $C_GREEN
+LOAD=`out_color $SL $LOAD`;
+echo -e " Server load is ::$LOAD";
+date
+echo
+SL=`ps auxc | awk '{print $3}' | sort -rn  | head -n 1`
+SL=`echo $SC | awk '{if (sc<8) print "0"; if (sc>8) print "1"}' sc=$SL`
+out_color $SL "WHO LOADS CPU%: "
+ps auxc | awk '{print $3" "$1" "$11" pid:: "$2}' | sort -rn  | head -n 5
+ 
+SL=`ps auxc | sort -n --key=5 |  tail -n 7  | awk '{print $4" "$5" "$11}' | head -n 1 | awk '{print $1}'`
+SL=`echo $SC | awk '{if (sc<5) print "0"; if (sc>5) print "1"}' sc=$SL`
+echo
+out_color $SL "MOST MEM USAGE%:"
+ps auxc | sort -n --key=5 |  tail -n 7  | awk '{print $4" "$5" "$11}'
+ 
+echo
+echo "TIME CPU USEGE:"
+ps auxfS | awk '{print $10" "$9" "$11}' | sort -rn --key=1 | head -n 5
+ 
+SL=`netstat -n  2> /dev/null | sort -n --key=5 | grep -E 'tcp|udp' | awk '{print $5 }' | awk -F: '{print $1}' | uniq -c | sort -rn --key=1|head -n 1 | awk '{print $1}'`
+SL=`echo $SC | awk '{if (sc<20) print "0"; if (sc>20) print "1"}' sc=$SL`
+SC_NUM=`netstat -n 2> /dev/null | sort -n --key=5 | grep -E 'tcp|udp' | awk '{print $5 }' | awk -F: '{print $1}' | wc -l`
+echo
+out_color $SL "SERVER CONNECTIONS( Total $SC_NUM)":
+netstat -n 2> /dev/null | sort -n --key=5 | grep -E 'tcp|udp' | awk '{print $5 }' | awk -F: '{print $1}' | sort -n --key=2 |uniq -c | sort -rn --key=1| head -n 7
+ 
+ 
+PR_NUM=`ps auxc | wc -l`
+echo "PROCESSES (Total $PR_NUM):"
+ps auxc | awk '{print $11}'| sort --key=1 |uniq -c | sort -rn --key=1 | head -n 7
+ 
+if [ $1='' ]; then
+        sleep 8
+else
+        sleep $1
+fi
+ 
+done
